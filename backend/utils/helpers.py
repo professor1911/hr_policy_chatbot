@@ -1,6 +1,5 @@
 # Shared helper functions for the HR AI Assistant
 import re
-import pandas as pd
 import os
 import csv
 import logging
@@ -12,7 +11,7 @@ from langchain_core.prompts import (
 from langchain_core.messages import SystemMessage
 from langchain_groq import ChatGroq
 from typing import List, Optional
-from langchain_community.document_loaders import PyPDFLoader, TextLoader, UnstructuredFileLoader
+from langchain_community.document_loaders import Docx2txtLoader, PyPDFLoader, TextLoader
 from langchain_core.documents import Document
 from src.config.config import GROQ_API_KEY, MODEL_CONFIG
 
@@ -144,7 +143,7 @@ def load_documents(files) -> List[Document]:
             elif file.name.endswith('.txt'):
                 loader = TextLoader(temp_path)
             else:
-                loader = UnstructuredFileLoader(temp_path)
+                loader = Docx2txtLoader(temp_path)
 
             documents.extend(loader.load())
 

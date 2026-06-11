@@ -2,14 +2,12 @@ import os
 import sys
 from pathlib import Path
 
-# Must be set before protobuf is imported (streamlit/chromadb).
-os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
-
 ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "backend"
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
+sys.path.insert(0, str(BACKEND_DIR))
 os.chdir(BACKEND_DIR)
+
+import bootstrap  # noqa: F401 — protobuf/chroma env before streamlit
 
 import logging
 import time
@@ -20,9 +18,10 @@ from dotenv import load_dotenv
 
 load_dotenv(ROOT_DIR / ".env")
 
-os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
-os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
-os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+if hasattr(st, "secrets"):
+    for key in ("GROQ_API_KEY",):
+        if key in st.secrets and not os.getenv(key):
+            os.environ[key] = st.secrets[key]
 
 logging.basicConfig(level=logging.WARNING, format="%(message)s")
 for _logger in (
@@ -92,7 +91,10 @@ def init_app():
         log.info("Building knowledge base from HR documents...")
         vector_store = run_document_processing(HR_DOCS_DIR)
     if vector_store is None:
-        raise RuntimeError("Failed to load or build the vector store.")
+        raise RuntimeError(
+            "Failed to load or build the vector store. "
+            "Add HR PDFs/DOCX files to backend/hr_documents/ and reboot."
+        )
 
     groq_client = GroqClient(api_key=GROQ_API_KEY)
     process_query = create_qa_chain(
@@ -179,7 +181,7 @@ def main():
 
                     elapsed = time.time() - start
                     src = ", ".join(sources) if sources else "-"
-                    log.info(f"OK | {intent} | {elapsed:.1f}s | {src}")
+                    log.info("OK | %s | %.1fs | %s", intent, elapsed, src)
 
                     st.session_state.messages.append(
                         {
@@ -200,7 +202,7 @@ def main():
                             st.toast("Feedback recorded.")
 
                 except Exception as exc:
-                    log.error(f"FAILED | {exc}")
+                    log.error("FAILED | %s", exc)
                     st.error(f"Something went wrong: {exc}")
 
 
