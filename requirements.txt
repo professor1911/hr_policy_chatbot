@@ -1,4 +1,6 @@
-streamlit
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+streamlit>=1.32.0
 python-dotenv
 groq
 langchain
@@ -8,12 +10,15 @@ langchain-groq
 langchain-huggingface
 langchain-text-splitters
 torch
-torchvision
 chromadb
 sentence-transformers
 pypdf
 unstructured
-# Avoid chromadb/protobuf descriptor conflicts on Streamlit Cloud
+
+# Keep protobuf 4.x — 7.x breaks chromadb; 3.x breaks modern streamlit
+protobuf>=4.25.0,<5
+
+# ChromaDB telemetry — avoids descriptor conflicts
 opentelemetry-api==1.27.0
 opentelemetry-sdk==1.27.0
 opentelemetry-exporter-otlp-proto-grpc==1.27.0

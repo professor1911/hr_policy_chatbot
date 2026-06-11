@@ -1,19 +1,22 @@
 import os
+import sys
+from pathlib import Path
 
-# Must be set before protobuf is imported (e.g. by streamlit/chromadb).
-os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+# Must be set before protobuf is imported (streamlit/chromadb).
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+ROOT_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = ROOT_DIR / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+os.chdir(BACKEND_DIR)
 
 import logging
-import sys
 import time
 import warnings
-from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
-
-ROOT_DIR = Path(__file__).parent
-BACKEND_DIR = ROOT_DIR / "backend"
 
 load_dotenv(ROOT_DIR / ".env")
 
@@ -39,9 +42,6 @@ for _logger in (
 log = logging.getLogger("hr_app")
 log.setLevel(logging.INFO)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-os.chdir(BACKEND_DIR)
-sys.path.insert(0, str(BACKEND_DIR))
 
 from src.config.config import GROQ_API_KEY, MODEL_CONFIG, UI_CONFIG
 from src.core.document_processor import load_vector_store, run_document_processing
@@ -83,7 +83,9 @@ def handle_casual_chat(groq_client: GroqClient, question: str, chat_history: str
 @st.cache_resource(show_spinner="Loading knowledge base and models...")
 def init_app():
     if not GROQ_API_KEY:
-        raise ValueError("GROQ_API_KEY is not set. Add it to the .env file.")
+        raise ValueError(
+            "GROQ_API_KEY is not set. Add it to .env locally or Streamlit Secrets."
+        )
 
     vector_store = load_vector_store(VECTOR_STORE_DIR)
     if vector_store is None:
