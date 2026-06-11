@@ -1,5 +1,9 @@
-import logging
 import os
+
+# Must be set before protobuf is imported (e.g. by streamlit/chromadb).
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
+import logging
 import sys
 import time
 import warnings

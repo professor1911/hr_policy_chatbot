@@ -44,9 +44,7 @@ htmlcov/
 .ipynb_checkpoints/
 
 # RAG / ML artifacts
-backend/hr_chroma_db/
-backend/model_cache/
-backend/hr_documents/
+
 backend/feedback_log.csv
 backend/file_to_url.csv
 
