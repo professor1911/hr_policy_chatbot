@@ -1,27 +1,21 @@
+import logging
 import os
 import sys
-from pathlib import Path
-
-ROOT_DIR = Path(__file__).resolve().parent
-BACKEND_DIR = ROOT_DIR / "backend"
-sys.path.insert(0, str(BACKEND_DIR))
-os.chdir(BACKEND_DIR)
-
-import bootstrap  # noqa: F401 — protobuf/chroma env before streamlit
-
-import logging
 import time
 import warnings
+from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
 
+ROOT_DIR = Path(__file__).parent
+BACKEND_DIR = ROOT_DIR / "backend"
+
 load_dotenv(ROOT_DIR / ".env")
 
-if hasattr(st, "secrets"):
-    for key in ("GROQ_API_KEY",):
-        if key in st.secrets and not os.getenv(key):
-            os.environ[key] = st.secrets[key]
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 logging.basicConfig(level=logging.WARNING, format="%(message)s")
 for _logger in (
@@ -41,6 +35,9 @@ for _logger in (
 log = logging.getLogger("hr_app")
 log.setLevel(logging.INFO)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+os.chdir(BACKEND_DIR)
+sys.path.insert(0, str(BACKEND_DIR))
 
 from src.config.config import GROQ_API_KEY, MODEL_CONFIG, UI_CONFIG
 from src.core.document_processor import load_vector_store, run_document_processing
@@ -82,19 +79,14 @@ def handle_casual_chat(groq_client: GroqClient, question: str, chat_history: str
 @st.cache_resource(show_spinner="Loading knowledge base and models...")
 def init_app():
     if not GROQ_API_KEY:
-        raise ValueError(
-            "GROQ_API_KEY is not set. Add it to .env locally or Streamlit Secrets."
-        )
+        raise ValueError("GROQ_API_KEY is not set. Add it to the .env file.")
 
     vector_store = load_vector_store(VECTOR_STORE_DIR)
     if vector_store is None:
         log.info("Building knowledge base from HR documents...")
         vector_store = run_document_processing(HR_DOCS_DIR)
     if vector_store is None:
-        raise RuntimeError(
-            "Failed to load or build the vector store. "
-            "Add HR PDFs/DOCX files to backend/hr_documents/ and reboot."
-        )
+        raise RuntimeError("Failed to load or build the vector store.")
 
     groq_client = GroqClient(api_key=GROQ_API_KEY)
     process_query = create_qa_chain(
@@ -181,7 +173,7 @@ def main():
 
                     elapsed = time.time() - start
                     src = ", ".join(sources) if sources else "-"
-                    log.info("OK | %s | %.1fs | %s", intent, elapsed, src)
+                    log.info(f"OK | {intent} | {elapsed:.1f}s | {src}")
 
                     st.session_state.messages.append(
                         {
@@ -202,7 +194,7 @@ def main():
                             st.toast("Feedback recorded.")
 
                 except Exception as exc:
-                    log.error("FAILED | %s", exc)
+                    log.error(f"FAILED | {exc}")
                     st.error(f"Something went wrong: {exc}")
 
 
