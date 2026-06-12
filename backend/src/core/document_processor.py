@@ -6,7 +6,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 import glob
 import concurrent.futures
 import time
@@ -220,20 +220,22 @@ def split_documents(documents, chunk_size=800, chunk_overlap=150):
 
 def create_vector_store(chunks, persist_directory="./hr_chroma_db"):
     """Create a vector store from document chunks."""
+    import shutil
+
     logger.info(f"Creating vector store from {len(chunks)} chunks")
     start_time = time.time()
 
-    # Use cached embedding model
+    if os.path.exists(persist_directory):
+        shutil.rmtree(persist_directory)
+
     embeddings = get_embedding_model()
 
-    # Create vector store with optimized batch size
     vector_store = Chroma.from_documents(
         documents=chunks,
         embedding=embeddings,
         persist_directory=persist_directory,
-        collection_metadata={"hnsw:space": "cosine"}  # Optimize for semantic search
+        collection_metadata={"hnsw:space": "cosine"},
     )
-    vector_store.persist()
 
     logger.info(f"Vector store created in {time.time() - start_time:.2f} seconds")
     return vector_store
@@ -283,8 +285,12 @@ def load_vector_store(persist_directory="./hr_chroma_db"):
         # Load the vector store
         vector_store = Chroma(
             persist_directory=persist_directory,
-            embedding_function=embeddings
+            embedding_function=embeddings,
         )
+
+        if vector_store._collection.count() == 0:
+            logger.warning("Vector store exists but contains no documents")
+            return None
 
         logger.info(f"Vector store loaded in {time.time() - start_time:.2f} seconds")
         return vector_store

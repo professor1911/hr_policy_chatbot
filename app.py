@@ -14,6 +14,7 @@ BACKEND_DIR = ROOT_DIR / "backend"
 load_dotenv(ROOT_DIR / ".env")
 
 os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
@@ -35,6 +36,7 @@ for _logger in (
 log = logging.getLogger("hr_app")
 log.setLevel(logging.INFO)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*unauthenticated requests.*")
 
 os.chdir(BACKEND_DIR)
 sys.path.insert(0, str(BACKEND_DIR))

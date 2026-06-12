@@ -44,7 +44,7 @@ def create_qa_chain(vector_store, groq_client, model_name="llama-3.3-70b-versati
             # Get relevant documents
             logger.info("Searching for relevant documents in vector store")
             search_start = time.time()
-            relevant_docs = vector_store.similarity_search(question, k=3)
+            relevant_docs = vector_store.similarity_search(question, k=6)
             search_time = time.time() - search_start
             
             logger.info(f"Found {len(relevant_docs)} relevant documents in {search_time:.2f}s")
@@ -77,7 +77,7 @@ def create_qa_chain(vector_store, groq_client, model_name="llama-3.3-70b-versati
                 messages=messages,
                 model=model_name,
                 temperature=0.2,
-                max_tokens=800,
+                max_tokens=1500,
             )
             api_time = time.time() - api_start
             logger.info(f"Groq API call completed in {api_time:.2f}s")
@@ -92,7 +92,10 @@ def create_qa_chain(vector_store, groq_client, model_name="llama-3.3-70b-versati
                 answer = "No answer generated. Please try again."
 
             # Get source documents
-            sources = [os.path.basename(doc.metadata.get('source', 'Unknown document')) for doc in relevant_docs]
+            sources = list(dict.fromkeys(
+                os.path.basename(doc.metadata.get('source', 'Unknown document'))
+                for doc in relevant_docs
+            ))
             logger.info(f"Source documents: {', '.join(sources)}")
 
             # Log total processing time

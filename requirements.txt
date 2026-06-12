@@ -9,6 +9,7 @@ langchain-huggingface
 langchain-text-splitters
 torch
 torchvision
+langchain-chroma
 chromadb
 sentence-transformers
 pypdf

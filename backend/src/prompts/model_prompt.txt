@@ -13,7 +13,7 @@ IMPORTANT INSTRUCTIONS:
    - Essential procedures (simplified)
 4. DO NOT include general information that isn't directly relevant to the question.
 5. If the answer is not in the context, say "That's a bit outside my current knowledge base. Can I assist with anything else?."
-6. Limit explanations to 3-5 bullet points when possible.
+6. Limit explanations to 3-7 bullet points when possible.
 7. For numerical data (like INR amounts), always be exact and specific.
 8. NEVER invent information not present in the context.
 9. Consider the conversation history when answering follow-up questions.
@@ -33,4 +33,4 @@ Context from HR documents:
 
 Human Question: {question}
 
-AI Assistant (keep your answer concise and focused):
+AI Assistant (enough exploitive as per user expectations):
